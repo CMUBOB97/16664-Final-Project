@@ -36,21 +36,16 @@ def sift_predict(path, sift, map):
             # use sift detector to extract descriptors
             img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
             keypoints, descriptors = sift.detectAndCompute(img, None)
-            top_4_dist = -1 * np.ones(4)
-            top_4_labels = -1 * np.ones(4)
+            all_dist = np.zeros(train_len)
+            all_labels = np.zeros(train_len)
 
             # compare to the dictionary and get 4 closest ones
             for cmp_idx in range(0, train_len):
-                dist = chi_2_dist(descriptors[0:N_FEATURES, :], train_descriptors[:, :, cmp_idx])
-                label = train_labels[cmp_idx]
-                if cmp_idx < 4:
-                    top_4_dist[cmp_idx] = dist
-                    top_4_labels[cmp_idx] = label
-                else:
-                    for option in range(0, 4):
-                        if dist < top_4_dist[option]:
-                            top_4_dist[option] = dist
-                            top_4_labels[option] = label
+                all_dist[cmp_idx] = chi_2_dist(descriptors[0:N_FEATURES, :], train_descriptors[:, :, cmp_idx])
+                all_labels[cmp_idx] = train_labels[cmp_idx]
+
+            top_4_idx = np.argpartition(all_dist, 4)[0:4]
+            top_4_labels = all_labels[top_4_idx]
 
             # count labels
             label_0_count = np.sum(top_4_labels == 0)
